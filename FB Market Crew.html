@@ -22,6 +22,7 @@
     --success: #10b981;
     --warning: #f59e0b;
     --danger: #ef4444;
+    --rejected: #6b7280;
     --text-primary: #f0f4fa;
     --text-secondary: #9ca3af;
     --text-muted: #6b7280;
@@ -151,6 +152,7 @@ body {
 .stat-value.green { color: var(--success); }
 .stat-value.red { color: var(--danger); }
 .stat-value.yellow { color: var(--warning); }
+.stat-value.rejected { color: var(--rejected); }
 
 /* Tabs */
 .tabs {
@@ -161,6 +163,7 @@ body {
     border-radius: 50px;
     border: 1px solid var(--border);
     margin-bottom: 24px;
+    flex-wrap: wrap;
 }
 
 .tab {
@@ -173,6 +176,7 @@ body {
     border-radius: 50px;
     cursor: pointer;
     transition: all 0.2s;
+    min-width: 150px;
 }
 
 .tab.active {
@@ -295,6 +299,16 @@ body {
 
 .btn-danger:hover {
     background: rgba(239, 68, 68, 0.25);
+}
+
+.btn-rejected {
+    background: rgba(107, 114, 128, 0.15);
+    color: var(--rejected);
+    border: 1px solid rgba(107, 114, 128, 0.3);
+}
+
+.btn-rejected:hover {
+    background: rgba(107, 114, 128, 0.25);
 }
 
 .btn-sm {
@@ -514,6 +528,12 @@ tr:hover td {
 }
 .badge-pending::before { background: var(--warning); }
 
+.badge-rejected {
+    background: rgba(107, 114, 128, 0.15);
+    color: var(--rejected);
+}
+.badge-rejected::before { background: var(--rejected); }
+
 /* Expiry */
 .expiry-warn { color: var(--warning); }
 .expiry-expired { color: var(--danger); }
@@ -522,6 +542,7 @@ tr:hover td {
 .actions {
     display: flex;
     gap: 6px;
+    flex-wrap: wrap;
 }
 
 /* Modal */
@@ -622,6 +643,7 @@ tr:hover td {
     background: var(--success);
 }
 .toast-dot.red { background: var(--danger); }
+.toast-dot.rejected { background: var(--rejected); }
 
 /* GitHub Section */
 .github-section {
@@ -679,6 +701,12 @@ tr:hover td {
     .form-grid {
         grid-template-columns: 1fr;
     }
+    .tabs {
+        flex-direction: column;
+    }
+    .tab {
+        width: 100%;
+    }
 }
 </style>
 </head>
@@ -726,18 +754,21 @@ tr:hover td {
                 <div class="stat-value yellow" id="stat-pending">0</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">Expiring Soon</div>
-                <div class="stat-value yellow" id="stat-expiring">0</div>
+                <div class="stat-label">Rejected</div>
+                <div class="stat-value rejected" id="stat-rejected">0</div>
             </div>
         </div>
 
         <!-- Tabs -->
         <div class="tabs">
-            <div class="tab active" onclick="switchTab('pending')" id="tab-pending">📋 Pending Registrations</div>
-            <div class="tab" onclick="switchTab('clients')" id="tab-clients">👥 Approved Clients</div>
+            <div class="tab active" onclick="switchTab('pending')" id="tab-pending">📋 Pending</div>
+            <div class="tab" onclick="switchTab('active')" id="tab-active">✅ Active</div>
+            <div class="tab" onclick="switchTab('blocked')" id="tab-blocked">⛔ Blocked</div>
+            <div class="tab" onclick="switchTab('rejected')" id="tab-rejected">🗑️ Rejected</div>
+            <div class="tab" onclick="switchTab('all')" id="tab-all">👥 All Clients</div>
         </div>
 
-        <!-- Pending Registrations Tab -->
+        <!-- Pending Tab -->
         <div class="tab-content active" id="content-pending">
             <div class="toolbar">
                 <div class="search-box">
@@ -755,14 +786,102 @@ tr:hover td {
                     Load from GitHub
                 </button>
             </div>
+            <div id="pending-list"></div>
+        </div>
 
-            <div id="pending-list">
-                <!-- Pending registrations will be rendered here -->
+        <!-- Active Tab -->
+        <div class="tab-content" id="content-active">
+            <div class="toolbar">
+                <div class="search-box">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                    <input class="search-input" id="search-active" placeholder="Search active..." oninput="renderActive()">
+                </div>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>HWID</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>WhatsApp</th>
+                            <th>Reg. Date</th>
+                            <th>Expiry</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="active-table-body"></tbody>
+                </table>
             </div>
         </div>
 
-        <!-- Approved Clients Tab -->
-        <div class="tab-content" id="content-clients">
+        <!-- Blocked Tab -->
+        <div class="tab-content" id="content-blocked">
+            <div class="toolbar">
+                <div class="search-box">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                    <input class="search-input" id="search-blocked" placeholder="Search blocked..." oninput="renderBlocked()">
+                </div>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>HWID</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>WhatsApp</th>
+                            <th>Reg. Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="blocked-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Rejected Tab -->
+        <div class="tab-content" id="content-rejected">
+            <div class="toolbar">
+                <div class="search-box">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                    <input class="search-input" id="search-rejected" placeholder="Search rejected..." oninput="renderRejected()">
+                </div>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>HWID</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>WhatsApp</th>
+                            <th>Reg. Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="rejected-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- All Clients Tab -->
+        <div class="tab-content" id="content-all">
             <!-- Add Form -->
             <div class="add-form" id="add-form">
                 <div class="form-title">➕ Add New Client Manually</div>
@@ -807,13 +926,13 @@ tr:hover td {
                         <circle cx="11" cy="11" r="8"/>
                         <line x1="21" y1="21" x2="16.65" y2="16.65"/>
                     </svg>
-                    <input class="search-input" id="search-clients" placeholder="Search clients..." oninput="renderClients()">
+                    <input class="search-input" id="search-all" placeholder="Search all clients..." oninput="renderAllClients()">
                 </div>
-                <select class="filter-select" id="filter-status" onchange="renderClients()">
+                <select class="filter-select" id="filter-status" onchange="renderAllClients()">
                     <option value="all">All Status</option>
-                    <option value="active">Active Only</option>
-                    <option value="blocked">Blocked Only</option>
-                    <option value="expired">Expired Only</option>
+                    <option value="ACTIVE">Active</option>
+                    <option value="BLOCKED">Blocked</option>
+                    <option value="REJECTED">Rejected</option>
                 </select>
                 <button class="btn btn-primary" onclick="toggleAddForm()">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -824,7 +943,7 @@ tr:hover td {
                 </button>
             </div>
 
-            <!-- Clients Table -->
+            <!-- All Clients Table -->
             <div class="table-container">
                 <table>
                     <thead>
@@ -840,20 +959,7 @@ tr:hover td {
                             <th>Actions</th>
                         </tr>
                     </thead>
-                    <tbody id="clients-table-body">
-                        <tr>
-                            <td colspan="9">
-                                <div class="empty-state">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
-                                        <circle cx="12" cy="12" r="10"/>
-                                        <line x1="12" y1="8" x2="12" y2="12"/>
-                                        <line x1="12" y1="16" x2="12.01" y2="16"/>
-                                    </svg>
-                                    <p>Loading clients...</p>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
+                    <tbody id="all-clients-table-body"></tbody>
                 </table>
             </div>
         </div>
@@ -919,6 +1025,7 @@ tr:hover td {
                         <select class="field-input" id="m-status">
                             <option value="ACTIVE">Active</option>
                             <option value="BLOCKED">Blocked</option>
+                            <option value="REJECTED">Rejected</option>
                         </select>
                     </div>
                 </div>
@@ -948,7 +1055,7 @@ tr:hover td {
         // DATA STORAGE
         // ============================================
         let pendingRegistrations = [];
-        let approvedClients = [];
+        let allClients = []; // Active, Blocked, Rejected sab yahan
         let editIndex = -1;
         let githubToken = '';
 
@@ -995,20 +1102,16 @@ tr:hover td {
         }
 
         function updateStats() {
-            const total = approvedClients.length;
-            const active = approvedClients.filter(c => c.status === 'ACTIVE').length;
-            const blocked = approvedClients.filter(c => c.status === 'BLOCKED').length;
+            const active = allClients.filter(c => c.status === 'ACTIVE').length;
+            const blocked = allClients.filter(c => c.status === 'BLOCKED').length;
+            const rejected = allClients.filter(c => c.status === 'REJECTED').length;
             const pending = pendingRegistrations.length;
-            const expiring = approvedClients.filter(c => {
-                const d = daysUntil(c.expiry);
-                return d !== null && d >= 0 && d <= 7;
-            }).length;
 
-            document.getElementById('stat-total').textContent = total;
+            document.getElementById('stat-total').textContent = allClients.length;
             document.getElementById('stat-active').textContent = active;
             document.getElementById('stat-blocked').textContent = blocked;
             document.getElementById('stat-pending').textContent = pending;
-            document.getElementById('stat-expiring').textContent = expiring;
+            document.getElementById('stat-rejected').textContent = rejected;
         }
 
         function copyToClipboard(text) {
@@ -1027,15 +1130,15 @@ tr:hover td {
             document.getElementById(`tab-${tab}`).classList.add('active');
             document.getElementById(`content-${tab}`).classList.add('active');
             
-            if (tab === 'pending') {
-                renderPending();
-            } else {
-                renderClients();
-            }
+            if (tab === 'pending') renderPending();
+            else if (tab === 'active') renderActive();
+            else if (tab === 'blocked') renderBlocked();
+            else if (tab === 'rejected') renderRejected();
+            else if (tab === 'all') renderAllClients();
         }
 
         // ============================================
-        // GITHUB ISSUES SE PENDING REGISTRATIONS LOAD KARO
+        // GITHUB ISSUES SE PENDING LOAD
         // ============================================
         async function loadPendingFromIssues() {
             try {
@@ -1045,7 +1148,6 @@ tr:hover td {
                 const issues = await response.json();
                 
                 pendingRegistrations = issues.map(issue => {
-                    // Parse HWID from issue body
                     const hwidMatch = issue.body.match(/\*\*HWID\*\*\s*\|\s*`(.+)`/);
                     const nameMatch = issue.body.match(/\*\*Name\*\*\s*\|\s*(.+)/);
                     const emailMatch = issue.body.match(/\*\*Email\*\*\s*\|\s*(.+)/);
@@ -1062,7 +1164,7 @@ tr:hover td {
                 });
                 
                 renderPending();
-                console.log('Pending registrations loaded:', pendingRegistrations);
+                updateStats();
             } catch(e) {
                 console.log('Error loading issues:', e);
                 pendingRegistrations = [];
@@ -1071,10 +1173,10 @@ tr:hover td {
         }
 
         // ============================================
-        // PENDING REGISTRATIONS
+        // PENDING RENDER
         // ============================================
         function renderPending() {
-            const search = document.getElementById('search-pending').value.toLowerCase();
+            const search = document.getElementById('search-pending')?.value.toLowerCase() || '';
             const filtered = pendingRegistrations.filter(p => 
                 p.hwid.toLowerCase().includes(search) ||
                 p.name.toLowerCase().includes(search) ||
@@ -1085,16 +1187,7 @@ tr:hover td {
             const container = document.getElementById('pending-list');
             
             if (filtered.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
-                            <circle cx="12" cy="12" r="10"/>
-                            <line x1="12" y1="8" x2="12" y2="12"/>
-                            <line x1="12" y1="16" x2="12.01" y2="16"/>
-                        </svg>
-                        <p>No pending registrations</p>
-                    </div>
-                `;
+                container.innerHTML = `<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><p>No pending registrations</p></div>`;
                 return;
             }
 
@@ -1107,57 +1200,29 @@ tr:hover td {
                                 ${p.hwid.substring(0, 16)}...${p.hwid.slice(-8)}
                             </div>
                             <div class="pending-details">
-                                <div class="pending-detail">
-                                    <div class="pending-label">Name</div>
-                                    <div>${p.name}</div>
-                                </div>
-                                <div class="pending-detail">
-                                    <div class="pending-label">Email</div>
-                                    <div>${p.email}</div>
-                                </div>
-                                <div class="pending-detail">
-                                    <div class="pending-label">WhatsApp</div>
-                                    <div>${p.wa}</div>
-                                </div>
-                                <div class="pending-detail">
-                                    <div class="pending-label">Issue #</div>
-                                    <div>${p.issueNumber}</div>
-                                </div>
-                                <div class="pending-detail">
-                                    <div class="pending-label">Received</div>
-                                    <div>${formatDate(p.timestamp)}</div>
-                                </div>
+                                <div class="pending-detail"><div class="pending-label">Name</div><div>${p.name}</div></div>
+                                <div class="pending-detail"><div class="pending-label">Email</div><div>${p.email}</div></div>
+                                <div class="pending-detail"><div class="pending-label">WhatsApp</div><div>${p.wa}</div></div>
+                                <div class="pending-detail"><div class="pending-label">Issue #</div><div>${p.issueNumber}</div></div>
+                                <div class="pending-detail"><div class="pending-label">Received</div><div>${formatDate(p.timestamp)}</div></div>
                             </div>
                         </div>
                         <div class="pending-actions">
-                            <button class="btn btn-success btn-sm" onclick="approveRegistration(${idx})">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <polyline points="20 6 9 17 4 12"/>
-                                </svg>
-                                Approve
-                            </button>
-                            <button class="btn btn-danger btn-sm" onclick="rejectRegistration(${idx})">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <line x1="18" y1="6" x2="6" y2="18"/>
-                                    <line x1="6" y1="6" x2="18" y2="18"/>
-                                </svg>
-                                Reject
-                            </button>
-                            <button class="btn btn-sm" onclick="blockRegistration(${idx})">
-                                ⚡ Block
-                            </button>
+                            <button class="btn btn-success btn-sm" onclick="approveRegistration(${idx})">✅ Approve</button>
+                            <button class="btn btn-danger btn-sm" onclick="rejectRegistration(${idx})">❌ Reject</button>
+                            <button class="btn btn-sm" onclick="blockRegistration(${idx})">⛔ Block</button>
                         </div>
                     </div>
                 `;
             }).join('');
-            
-            updateStats();
         }
 
+        // ============================================
+        // APPROVE REGISTRATION
+        // ============================================
         async function approveRegistration(index) {
             const reg = pendingRegistrations[index];
             
-            // Ask for expiry days
             const days = prompt('Enter expiry days (default 30):', '30');
             const expiryDays = parseInt(days) || 30;
             
@@ -1165,8 +1230,7 @@ tr:hover td {
             exp.setDate(exp.getDate() + expiryDays);
             const expiryStr = exp.toISOString().split('T')[0];
             
-            // Add to approved clients
-            approvedClients.push({
+            allClients.push({
                 hwid: reg.hwid,
                 name: reg.name,
                 email: reg.email,
@@ -1176,33 +1240,53 @@ tr:hover td {
                 status: 'ACTIVE'
             });
             
-            // Close GitHub issue
             await closeIssue(reg.issueNumber, 'approved');
-            
-            // Remove from pending
             pendingRegistrations.splice(index, 1);
             
             renderPending();
-            renderClients();
+            renderActive();
+            renderAllClients();
+            updateStats();
+            
             toast(`${reg.name} approved until ${expiryStr}`);
+            await saveToGitHub();
         }
 
+        // ============================================
+        // REJECT REGISTRATION (Rejected list mein save)
+        // ============================================
         async function rejectRegistration(index) {
             const reg = pendingRegistrations[index];
             
-            // Close GitHub issue
-            await closeIssue(reg.issueNumber, 'rejected');
+            allClients.push({
+                hwid: reg.hwid,
+                name: reg.name,
+                email: reg.email,
+                wa: reg.wa,
+                reg: today(),
+                expiry: today(),
+                status: 'REJECTED'
+            });
             
+            await closeIssue(reg.issueNumber, 'rejected');
             pendingRegistrations.splice(index, 1);
+            
             renderPending();
-            toast(`Registration from ${reg.name} rejected`, false);
+            renderRejected();
+            renderAllClients();
+            updateStats();
+            
+            toast(`${reg.name} rejected`, false);
+            await saveToGitHub();
         }
 
+        // ============================================
+        // BLOCK REGISTRATION
+        // ============================================
         async function blockRegistration(index) {
             const reg = pendingRegistrations[index];
             
-            // Add as blocked
-            approvedClients.push({
+            allClients.push({
                 hwid: reg.hwid,
                 name: reg.name,
                 email: reg.email,
@@ -1212,15 +1296,21 @@ tr:hover td {
                 status: 'BLOCKED'
             });
             
-            // Close GitHub issue
             await closeIssue(reg.issueNumber, 'blocked');
-            
             pendingRegistrations.splice(index, 1);
+            
             renderPending();
-            renderClients();
-            toast(`${reg.name} added as BLOCKED`, false);
+            renderBlocked();
+            renderAllClients();
+            updateStats();
+            
+            toast(`${reg.name} blocked`, false);
+            await saveToGitHub();
         }
 
+        // ============================================
+        // CLOSE ISSUE
+        // ============================================
         async function closeIssue(issueNumber, action) {
             if (!githubToken) {
                 githubToken = prompt('Enter GitHub token to close issue:');
@@ -1228,16 +1318,13 @@ tr:hover td {
             }
             
             try {
-                const response = await fetch(`${GITHUB_API}/issues/${issueNumber}`, {
+                await fetch(`${GITHUB_API}/issues/${issueNumber}`, {
                     method: 'PATCH',
                     headers: {
                         'Authorization': `token ${githubToken}`,
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({
-                        state: 'closed',
-                        labels: [action]
-                    })
+                    body: JSON.stringify({ state: 'closed', labels: [action] })
                 });
             } catch(e) {
                 console.log('Error closing issue:', e);
@@ -1245,58 +1332,86 @@ tr:hover td {
         }
 
         // ============================================
-        // CLIENTS MANAGEMENT
+        // RENDER ACTIVE
         // ============================================
-        function renderClients() {
-            const search = document.getElementById('search-clients').value.toLowerCase();
-            const filter = document.getElementById('filter-status').value;
+        function renderActive() {
+            const search = document.getElementById('search-active')?.value.toLowerCase() || '';
+            const active = allClients.filter(c => c.status === 'ACTIVE' && 
+                (c.hwid.toLowerCase().includes(search) ||
+                 c.name.toLowerCase().includes(search) ||
+                 c.email.toLowerCase().includes(search) ||
+                 c.wa.includes(search))
+            );
+            renderTable('active-table-body', active);
+        }
+
+        // ============================================
+        // RENDER BLOCKED
+        // ============================================
+        function renderBlocked() {
+            const search = document.getElementById('search-blocked')?.value.toLowerCase() || '';
+            const blocked = allClients.filter(c => c.status === 'BLOCKED' &&
+                (c.hwid.toLowerCase().includes(search) ||
+                 c.name.toLowerCase().includes(search) ||
+                 c.email.toLowerCase().includes(search) ||
+                 c.wa.includes(search))
+            );
+            renderTable('blocked-table-body', blocked);
+        }
+
+        // ============================================
+        // RENDER REJECTED
+        // ============================================
+        function renderRejected() {
+            const search = document.getElementById('search-rejected')?.value.toLowerCase() || '';
+            const rejected = allClients.filter(c => c.status === 'REJECTED' &&
+                (c.hwid.toLowerCase().includes(search) ||
+                 c.name.toLowerCase().includes(search) ||
+                 c.email.toLowerCase().includes(search) ||
+                 c.wa.includes(search))
+            );
+            renderTable('rejected-table-body', rejected);
+        }
+
+        // ============================================
+        // RENDER ALL CLIENTS
+        // ============================================
+        function renderAllClients() {
+            const search = document.getElementById('search-all')?.value.toLowerCase() || '';
+            const filter = document.getElementById('filter-status')?.value || 'all';
             
-            let filtered = approvedClients.filter(c => {
+            let filtered = allClients.filter(c => {
                 const matchesSearch = !search ||
                     c.hwid.toLowerCase().includes(search) ||
-                    (c.name || '').toLowerCase().includes(search) ||
-                    (c.email || '').toLowerCase().includes(search) ||
-                    (c.wa || '').includes(search);
+                    c.name.toLowerCase().includes(search) ||
+                    c.email.toLowerCase().includes(search) ||
+                    c.wa.includes(search);
                 
                 if (!matchesSearch) return false;
-                
                 if (filter === 'all') return true;
-                if (filter === 'active') return c.status === 'ACTIVE';
-                if (filter === 'blocked') return c.status === 'BLOCKED';
-                if (filter === 'expired') {
-                    const days = daysUntil(c.expiry);
-                    return days !== null && days < 0;
-                }
-                return true;
+                return c.status === filter;
             });
-
-            const tbody = document.getElementById('clients-table-body');
             
-            if (filtered.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="9">
-                            <div class="empty-state">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
-                                    <circle cx="12" cy="12" r="10"/>
-                                    <line x1="12" y1="8" x2="12" y2="12"/>
-                                    <line x1="12" y1="16" x2="12.01" y2="16"/>
-                                </svg>
-                                <p>No clients found</p>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-                updateStats();
+            renderTable('all-clients-table-body', filtered);
+        }
+
+        // ============================================
+        // RENDER TABLE HELPER
+        // ============================================
+        function renderTable(tableId, clients) {
+            const tbody = document.getElementById(tableId);
+            
+            if (!clients || clients.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><p>No clients found</p></div></td></tr>`;
                 return;
             }
 
-            tbody.innerHTML = filtered.map((c, i) => {
-                const idx = approvedClients.indexOf(c);
+            tbody.innerHTML = clients.map((c, i) => {
+                const idx = allClients.indexOf(c);
                 const days = daysUntil(c.expiry);
                 let expiryDisplay = formatDate(c.expiry);
                 
-                if (days !== null) {
+                if (days !== null && c.status === 'ACTIVE') {
                     if (days < 0) {
                         expiryDisplay = `<span class="expiry-expired">${formatDate(c.expiry)}<br><small>Expired</small></span>`;
                     } else if (days <= 7) {
@@ -1304,30 +1419,24 @@ tr:hover td {
                     }
                 }
 
+                const statusClass = c.status === 'ACTIVE' ? 'badge-active' : 
+                                   c.status === 'BLOCKED' ? 'badge-blocked' : 'badge-rejected';
+
                 return `
                     <tr>
                         <td style="color: var(--text-muted);">${i + 1}</td>
-                        <td>
-                            <div class="hwid-cell" onclick="copyToClipboard('${c.hwid}')" title="Click to copy">
-                                ${c.hwid.substring(0, 12)}...${c.hwid.slice(-8)}
-                            </div>
-                        </td>
+                        <td><div class="hwid-cell" onclick="copyToClipboard('${c.hwid}')" title="Click to copy">${c.hwid.substring(0, 12)}...${c.hwid.slice(-8)}</div></td>
                         <td><strong>${c.name || '—'}</strong></td>
                         <td>${c.email || '—'}</td>
                         <td>${c.wa || '—'}</td>
                         <td>${formatDate(c.reg)}</td>
                         <td>${expiryDisplay}</td>
-                        <td>
-                            <span class="badge ${c.status === 'BLOCKED' ? 'badge-blocked' : 'badge-active'}">
-                                ${c.status || 'ACTIVE'}
-                            </span>
-                        </td>
+                        <td><span class="badge ${statusClass}">${c.status}</span></td>
                         <td>
                             <div class="actions">
-                                <button class="btn btn-sm ${c.status === 'BLOCKED' ? 'btn-success' : 'btn-danger'}" 
-                                        onclick="toggleStatus(${idx})">
-                                    ${c.status === 'BLOCKED' ? 'Activate' : 'Block'}
-                                </button>
+                                ${c.status !== 'ACTIVE' ? `<button class="btn btn-success btn-sm" onclick="moveToActive(${idx})">✅ Activate</button>` : ''}
+                                ${c.status !== 'BLOCKED' ? `<button class="btn btn-danger btn-sm" onclick="moveToBlocked(${idx})">⛔ Block</button>` : ''}
+                                ${c.status !== 'REJECTED' ? `<button class="btn btn-rejected btn-sm" onclick="moveToRejected(${idx})">🗑️ Reject</button>` : ''}
                                 <button class="btn btn-sm" onclick="openEdit(${idx})">Edit</button>
                                 <button class="btn btn-sm" onclick="removeClient(${idx})">✕</button>
                             </div>
@@ -1339,21 +1448,49 @@ tr:hover td {
             updateStats();
         }
 
-        function toggleStatus(idx) {
-            approvedClients[idx].status = approvedClients[idx].status === 'BLOCKED' ? 'ACTIVE' : 'BLOCKED';
-            const name = approvedClients[idx].name || 'Client';
-            toast(`${name} ${approvedClients[idx].status === 'ACTIVE' ? 'activated' : 'blocked'}`);
-            renderClients();
+        // ============================================
+        // MOVE BETWEEN STATUSES
+        // ============================================
+        async function moveToActive(idx) {
+            allClients[idx].status = 'ACTIVE';
+            allClients[idx].expiry = (() => {
+                const d = new Date();
+                d.setMonth(d.getMonth() + 1);
+                return d.toISOString().split('T')[0];
+            })();
+            renderAllClients();
+            renderActive();
+            renderBlocked();
+            renderRejected();
+            toast(`${allClients[idx].name} moved to Active`);
+            await saveToGitHub();
         }
 
-        function removeClient(idx) {
-            if (!confirm('Remove this client?')) return;
-            const name = approvedClients[idx].name || 'Client';
-            approvedClients.splice(idx, 1);
-            renderClients();
-            toast(`${name} removed`);
+        async function moveToBlocked(idx) {
+            allClients[idx].status = 'BLOCKED';
+            allClients[idx].expiry = today();
+            renderAllClients();
+            renderActive();
+            renderBlocked();
+            renderRejected();
+            toast(`${allClients[idx].name} moved to Blocked`, false);
+            await saveToGitHub();
         }
 
+        async function moveToRejected(idx) {
+            allClients[idx].status = 'REJECTED';
+            allClients[idx].expiry = today();
+            renderAllClients();
+            renderActive();
+            renderBlocked();
+            renderRejected();
+            toast(`${allClients[idx].name} moved to Rejected`, false);
+            await saveToGitHub();
+        }
+
+        // ============================================
+        // ADD CLIENT
+        // ============================================
         function toggleAddForm() {
             const form = document.getElementById('add-form');
             form.classList.toggle('open');
@@ -1379,7 +1516,7 @@ tr:hover td {
                 return;
             }
 
-            approvedClients.unshift({
+            allClients.unshift({
                 hwid,
                 name,
                 email,
@@ -1394,13 +1531,18 @@ tr:hover td {
                 document.getElementById(id).value = '';
             });
 
-            renderClients();
+            renderAllClients();
+            renderActive();
             toast(`${name || 'Client'} added successfully`);
+            saveToGitHub();
         }
 
+        // ============================================
+        // EDIT CLIENT
+        // ============================================
         function openEdit(idx) {
             editIndex = idx;
-            const c = approvedClients[idx];
+            const c = allClients[idx];
             
             document.getElementById('m-title').textContent = c.name || 'Edit Client';
             document.getElementById('m-sub').textContent = 'Update client information';
@@ -1418,8 +1560,8 @@ tr:hover td {
         function saveEdit() {
             if (editIndex < 0) return;
             
-            approvedClients[editIndex] = {
-                ...approvedClients[editIndex],
+            allClients[editIndex] = {
+                ...allClients[editIndex],
                 name: document.getElementById('m-name').value.trim(),
                 email: document.getElementById('m-email').value.trim(),
                 wa: document.getElementById('m-wa').value.trim(),
@@ -1429,8 +1571,12 @@ tr:hover td {
             };
             
             closeModal();
-            renderClients();
+            renderAllClients();
+            renderActive();
+            renderBlocked();
+            renderRejected();
             toast('Client updated');
+            saveToGitHub();
         }
 
         function closeModal(e) {
@@ -1439,13 +1585,25 @@ tr:hover td {
             }
         }
 
+        function removeClient(idx) {
+            if (!confirm('Remove this client?')) return;
+            const name = allClients[idx].name || 'Client';
+            allClients.splice(idx, 1);
+            renderAllClients();
+            renderActive();
+            renderBlocked();
+            renderRejected();
+            updateStats();
+            toast(`${name} removed`);
+            saveToGitHub();
+        }
+
         // ============================================
         // GITHUB INTEGRATION
         // ============================================
         function toJSON() {
             const data = {};
-            
-            approvedClients.forEach(c => {
+            allClients.forEach(c => {
                 data[c.hwid] = {
                     status: c.status || 'ACTIVE',
                     name: c.name || '',
@@ -1455,7 +1613,6 @@ tr:hover td {
                     expiry: c.expiry || ''
                 };
             });
-            
             return JSON.stringify(data, null, 2);
         }
 
@@ -1482,11 +1639,8 @@ tr:hover td {
             toast('Saving to GitHub...');
             
             try {
-                // Get current file SHA
                 const getResp = await fetch(`${GITHUB_API}/contents/licenses.json`, {
-                    headers: {
-                        'Authorization': `token ${githubToken}`
-                    }
+                    headers: { 'Authorization': `token ${githubToken}` }
                 });
                 
                 let sha = '';
@@ -1495,21 +1649,18 @@ tr:hover td {
                     sha = data.sha;
                 }
                 
-                // Prepare commit
                 const content = btoa(unescape(encodeURIComponent(toJSON())));
-                const commitData = {
-                    message: 'Update licenses via control panel',
-                    content: content,
-                    sha: sha
-                };
-                
                 const putResp = await fetch(`${GITHUB_API}/contents/licenses.json`, {
                     method: 'PUT',
                     headers: {
                         'Authorization': `token ${githubToken}`,
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify(commitData)
+                    body: JSON.stringify({
+                        message: 'Update licenses via control panel',
+                        content: content,
+                        sha: sha
+                    })
                 });
                 
                 if (putResp.ok) {
@@ -1526,13 +1677,12 @@ tr:hover td {
             toast('Loading from GitHub...');
             
             try {
-                // Load approved clients from JSON
                 const jsonResponse = await fetch(GITHUB_RAW + '?t=' + Date.now());
                 if (!jsonResponse.ok) throw new Error('Failed to fetch JSON');
                 
                 const jsonData = await jsonResponse.json();
                 
-                approvedClients = Object.entries(jsonData).map(([hwid, val]) => ({
+                allClients = Object.entries(jsonData).map(([hwid, val]) => ({
                     hwid,
                     status: val.status || 'ACTIVE',
                     name: val.name || '',
@@ -1542,12 +1692,15 @@ tr:hover td {
                     expiry: val.expiry || ''
                 }));
                 
-                // Load pending from issues
                 await loadPendingFromIssues();
                 
                 renderPending();
-                renderClients();
-                toast(`Loaded ${approvedClients.length} clients, ${pendingRegistrations.length} pending`);
+                renderActive();
+                renderBlocked();
+                renderRejected();
+                renderAllClients();
+                updateStats();
+                toast(`Loaded ${allClients.length} clients, ${pendingRegistrations.length} pending`);
             } catch(e) {
                 toast('Could not load from GitHub: ' + e.message, false);
                 console.error(e);
@@ -1560,41 +1713,42 @@ tr:hover td {
         // ============================================
         window.botSubmitRegistration = function(hwid, name, email, wa) {
             const existing = pendingRegistrations.find(p => p.hwid === hwid) ||
-                            approvedClients.find(c => c.hwid === hwid);
+                            allClients.find(c => c.hwid === hwid);
             
             if (existing) {
                 return { success: false, message: 'HWID already registered' };
             }
             
-            // This is just for simulation - actual registration happens via GitHub Issues
             toast(`New registration from ${name} - Check GitHub Issues`, true);
-            
             return { success: true, message: 'Registration submitted - check GitHub Issues' };
         };
 
         window.botCheckStatus = function(hwid) {
             hwid = hwid.toUpperCase();
             
-            const client = approvedClients.find(c => c.hwid === hwid);
+            const client = allClients.find(c => c.hwid === hwid);
             if (client) {
                 if (client.status === 'BLOCKED') {
                     return { status: 'BLOCKED', message: 'Access blocked' };
                 }
-                
-                if (client.expiry) {
-                    const days = daysUntil(client.expiry);
-                    if (days < 0) {
-                        return { status: 'EXPIRED', message: 'License expired', expiry: client.expiry };
-                    }
-                    return {
-                        status: 'ACTIVE',
-                        message: 'Access granted',
-                        expiry: client.expiry,
-                        daysLeft: days
-                    };
+                if (client.status === 'REJECTED') {
+                    return { status: 'REJECTED', message: 'Registration rejected' };
                 }
-                
-                return { status: 'ACTIVE', message: 'Access granted' };
+                if (client.status === 'ACTIVE') {
+                    if (client.expiry) {
+                        const days = daysUntil(client.expiry);
+                        if (days < 0) {
+                            return { status: 'EXPIRED', message: 'License expired', expiry: client.expiry };
+                        }
+                        return {
+                            status: 'ACTIVE',
+                            message: 'Access granted',
+                            expiry: client.expiry,
+                            daysLeft: days
+                        };
+                    }
+                    return { status: 'ACTIVE', message: 'Access granted' };
+                }
             }
             
             return { status: 'NOT_FOUND', message: 'Not registered' };
@@ -1604,7 +1758,7 @@ tr:hover td {
         // INITIALIZATION
         // ============================================
         function initDemo() {
-            approvedClients = [
+            allClients = [
                 {
                     hwid: 'E274E46D37CFE3DF125983F360D4C9B07C0F7194075A9E371D64330C03BBD98F',
                     name: 'Asad Maqbool',
@@ -1615,11 +1769,10 @@ tr:hover td {
                     status: 'ACTIVE'
                 }
             ];
-            
             pendingRegistrations = [];
-            
-            renderPending();
-            renderClients();
+            renderAllClients();
+            renderActive();
+            updateStats();
         }
 
         // Auto-load from GitHub on start
