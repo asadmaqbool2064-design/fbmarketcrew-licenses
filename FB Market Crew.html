@@ -1,692 +1,686 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FB Market Crew — Complete Control Panel</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        :root {
-            --bg-primary: #0a0c10;
-            --bg-secondary: #0f1219;
-            --bg-tertiary: #1a1f2c;
-            --accent: #2563eb;
-            --accent-hover: #3b82f6;
-            --accent-glow: rgba(37, 99, 235, 0.3);
-            --success: #10b981;
-            --warning: #f59e0b;
-            --danger: #ef4444;
-            --text-primary: #f0f4fa;
-            --text-secondary: #9ca3af;
-            --text-muted: #6b7280;
-            --border: rgba(255, 255, 255, 0.08);
-            --border-hover: rgba(255, 255, 255, 0.12);
-            --card-bg: #151b28;
-            --radius: 12px;
-            --radius-sm: 8px;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            min-height: 100vh;
-            position: relative;
-            overflow-x: hidden;
-        }
-
-        /* Animated background */
-        .gradient-bg {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle at 0% 0%, rgba(37, 99, 235, 0.15) 0%, transparent 50%),
-                        radial-gradient(circle at 100% 100%, rgba(245, 158, 11, 0.1) 0%, transparent 50%);
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        .container {
-            position: relative;
-            z-index: 1;
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 24px;
-        }
-
-        /* Header */
-        .header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 32px;
-            padding: 20px 24px;
-            background: var(--bg-secondary);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            backdrop-filter: blur(10px);
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-
-        .logo-icon {
-            width: 48px;
-            height: 48px;
-            background: linear-gradient(135deg, var(--accent), var(--warning));
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            font-weight: 800;
-            color: white;
-        }
-
-        .logo-text h1 {
-            font-size: 20px;
-            font-weight: 700;
-            letter-spacing: -0.5px;
-        }
-
-        .logo-text p {
-            font-size: 13px;
-            color: var(--text-secondary);
-            margin-top: 4px;
-        }
-
-        .header-actions {
-            display: flex;
-            gap: 12px;
-        }
-
-        /* Stats Grid */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 16px;
-            margin-bottom: 32px;
-        }
-
-        .stat-card {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 20px;
-            transition: all 0.2s;
-        }
-
-        .stat-card:hover {
-            border-color: var(--border-hover);
-            transform: translateY(-2px);
-        }
-
-        .stat-label {
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 8px;
-        }
-
-        .stat-value {
-            font-size: 32px;
-            font-weight: 800;
-            line-height: 1;
-        }
-
-        .stat-value.blue { color: var(--accent); }
-        .stat-value.green { color: var(--success); }
-        .stat-value.red { color: var(--danger); }
-        .stat-value.yellow { color: var(--warning); }
-
-        /* Tabs */
-        .tabs {
-            display: flex;
-            gap: 8px;
-            background: var(--bg-secondary);
-            padding: 6px;
-            border-radius: 50px;
-            border: 1px solid var(--border);
-            margin-bottom: 24px;
-        }
-
-        .tab {
-            flex: 1;
-            padding: 12px 24px;
-            text-align: center;
-            font-weight: 600;
-            font-size: 14px;
-            color: var(--text-secondary);
-            border-radius: 50px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .tab.active {
-            background: var(--accent);
-            color: white;
-            box-shadow: 0 0 20px var(--accent-glow);
-        }
-
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        /* Toolbar */
-        .toolbar {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-
-        .search-box {
-            flex: 1;
-            position: relative;
-            min-width: 280px;
-        }
-
-        .search-box svg {
-            position: absolute;
-            left: 14px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-muted);
-        }
-
-        .search-input {
-            width: 100%;
-            background: var(--bg-tertiary);
-            border: 1px solid var(--border);
-            border-radius: 50px;
-            padding: 12px 20px 12px 45px;
-            color: var(--text-primary);
-            font-family: 'Inter', sans-serif;
-            font-size: 14px;
-            outline: none;
-            transition: all 0.2s;
-        }
-
-        .search-input:focus {
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px var(--accent-glow);
-        }
-
-        .filter-select {
-            background: var(--bg-tertiary);
-            border: 1px solid var(--border);
-            border-radius: 50px;
-            padding: 12px 24px;
-            color: var(--text-primary);
-            font-family: 'Inter', sans-serif;
-            font-size: 14px;
-            outline: none;
-            cursor: pointer;
-        }
-
-        /* Buttons */
-        .btn {
-            padding: 12px 24px;
-            border-radius: 50px;
-            font-family: 'Inter', sans-serif;
-            font-size: 14px;
-            font-weight: 600;
-            border: none;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.2s;
-            background: var(--bg-tertiary);
-            color: var(--text-secondary);
-            border: 1px solid var(--border);
-        }
-
-        .btn:hover {
-            background: var(--bg-secondary);
-            border-color: var(--border-hover);
-            color: var(--text-primary);
-        }
-
-        .btn-primary {
-            background: var(--accent);
-            color: white;
-            border: none;
-        }
-
-        .btn-primary:hover {
-            background: var(--accent-hover);
-            box-shadow: 0 0 20px var(--accent-glow);
-        }
-
-        .btn-success {
-            background: rgba(16, 185, 129, 0.15);
-            color: var(--success);
-            border: 1px solid rgba(16, 185, 129, 0.3);
-        }
-
-        .btn-success:hover {
-            background: rgba(16, 185, 129, 0.25);
-        }
-
-        .btn-danger {
-            background: rgba(239, 68, 68, 0.15);
-            color: var(--danger);
-            border: 1px solid rgba(239, 68, 68, 0.3);
-        }
-
-        .btn-danger:hover {
-            background: rgba(239, 68, 68, 0.25);
-        }
-
-        .btn-sm {
-            padding: 8px 16px;
-            font-size: 13px;
-        }
-
-        /* Add Form */
-        .add-form {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 24px;
-            margin-bottom: 24px;
-            display: none;
-        }
-
-        .add-form.open {
-            display: block;
-            animation: slideDown 0.3s ease;
-        }
-
-        @keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .form-title {
-            font-size: 16px;
-            font-weight: 600;
-            margin-bottom: 20px;
-            color: var(--text-primary);
-        }
-
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 16px;
-            margin-bottom: 16px;
-        }
-
-        .field-label {
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 6px;
-        }
-
-        .field-input {
-            width: 100%;
-            background: var(--bg-tertiary);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            padding: 12px 16px;
-            color: var(--text-primary);
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 13px;
-            outline: none;
-            transition: all 0.2s;
-        }
-
-        .field-input:focus {
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px var(--accent-glow);
-        }
-
-        /* Pending Cards */
-        .pending-card {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 20px;
-            margin-bottom: 16px;
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 20px;
-            transition: all 0.2s;
-        }
-
-        .pending-card:hover {
-            border-color: var(--border-hover);
-        }
-
-        .pending-info {
-            flex: 2;
-            min-width: 300px;
-        }
-
-        .pending-hwid {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 12px;
-            color: var(--accent);
-            background: var(--bg-tertiary);
-            padding: 6px 12px;
-            border-radius: 50px;
-            display: inline-block;
-            margin-bottom: 10px;
-            cursor: pointer;
-        }
-
-        .pending-details {
-            display: flex;
-            gap: 24px;
-            flex-wrap: wrap;
-        }
-
-        .pending-detail {
-            font-size: 14px;
-        }
-
-        .pending-label {
-            font-size: 11px;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            margin-bottom: 4px;
-        }
-
-        .pending-actions {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-
-        /* Table */
-        .table-container {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            overflow: auto;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            min-width: 1200px;
-        }
-
-        th {
-            text-align: left;
-            padding: 16px 20px;
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            background: var(--bg-tertiary);
-            border-bottom: 1px solid var(--border);
-        }
-
-        td {
-            padding: 16px 20px;
-            font-size: 14px;
-            border-bottom: 1px solid var(--border);
-        }
-
-        tr:last-child td {
-            border-bottom: none;
-        }
-
-        tr:hover td {
-            background: rgba(255, 255, 255, 0.02);
-        }
-
-        .hwid-cell {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 12px;
-            color: var(--text-secondary);
-            cursor: pointer;
-        }
-
-        .hwid-cell:hover {
-            color: var(--accent);
-        }
-
-        /* Status Badges */
-        .badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 6px 12px;
-            border-radius: 50px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-
-        .badge::before {
-            content: '';
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-        }
-
-        .badge-active {
-            background: rgba(16, 185, 129, 0.15);
-            color: var(--success);
-        }
-        .badge-active::before { background: var(--success); }
-
-        .badge-blocked {
-            background: rgba(239, 68, 68, 0.15);
-            color: var(--danger);
-        }
-        .badge-blocked::before { background: var(--danger); }
-
-        .badge-pending {
-            background: rgba(245, 158, 11, 0.15);
-            color: var(--warning);
-        }
-        .badge-pending::before { background: var(--warning); }
-
-        .badge-expired {
-            background: rgba(107, 114, 128, 0.15);
-            color: var(--text-muted);
-        }
-        .badge-expired::before { background: var(--text-muted); }
-
-        /* Expiry */
-        .expiry-warn { color: var(--warning); }
-        .expiry-expired { color: var(--danger); }
-
-        /* Actions */
-        .actions {
-            display: flex;
-            gap: 6px;
-        }
-
-        /* Modal */
-        .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(4px);
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.2s;
-        }
-
-        .modal-overlay.open {
-            opacity: 1;
-            pointer-events: all;
-        }
-
-        .modal {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 32px;
-            width: 600px;
-            max-width: 90vw;
-            transform: scale(0.95);
-            transition: transform 0.2s;
-        }
-
-        .modal-overlay.open .modal {
-            transform: scale(1);
-        }
-
-        .modal-title {
-            font-size: 20px;
-            font-weight: 700;
-            margin-bottom: 8px;
-        }
-
-        .modal-sub {
-            font-size: 14px;
-            color: var(--text-secondary);
-            margin-bottom: 24px;
-        }
-
-        .modal-hwid {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 12px;
-            color: var(--accent);
-            background: var(--bg-tertiary);
-            padding: 12px;
-            border-radius: var(--radius-sm);
-            margin-bottom: 20px;
-            word-break: break-all;
-        }
-
-        .modal-actions {
-            display: flex;
-            gap: 12px;
-            justify-content: flex-end;
-            margin-top: 24px;
-        }
-
-        /* Toast */
-        .toast {
-            position: fixed;
-            bottom: 24px;
-            right: 24px;
-            background: var(--bg-secondary);
-            border: 1px solid var(--border);
-            border-radius: 50px;
-            padding: 14px 24px;
-            font-size: 14px;
-            color: var(--text-primary);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-            z-index: 9999;
-            transform: translateY(100px);
-            opacity: 0;
-            transition: all 0.3s ease;
-        }
-
-        .toast.show {
-            transform: translateY(0);
-            opacity: 1;
-        }
-
-        .toast-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: var(--success);
-        }
-        .toast-dot.red { background: var(--danger); }
-
-        /* GitHub Section */
-        .github-section {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 24px;
-            margin-top: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 20px;
-            flex-wrap: wrap;
-        }
-
-        .github-info h3 {
-            font-size: 16px;
-            font-weight: 600;
-            margin-bottom: 4px;
-        }
-
-        .github-info p {
-            font-size: 13px;
-            color: var(--text-secondary);
-        }
-
-        .github-actions {
-            display: flex;
-            gap: 12px;
-        }
-
-        /* Empty State */
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: var(--text-muted);
-        }
-
-        .empty-state svg {
-            width: 60px;
-            height: 60px;
-            margin-bottom: 16px;
-            opacity: 0.5;
-        }
-
-        .empty-state p {
-            font-size: 14px;
-        }
-
-        /* Responsive */
-        @media (max-width: 1024px) {
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            .form-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FB Market Crew — Complete Control Panel</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --bg-primary: #0a0c10;
+    --bg-secondary: #0f1219;
+    --bg-tertiary: #1a1f2c;
+    --accent: #2563eb;
+    --accent-hover: #3b82f6;
+    --accent-glow: rgba(37, 99, 235, 0.3);
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --text-primary: #f0f4fa;
+    --text-secondary: #9ca3af;
+    --text-muted: #6b7280;
+    --border: rgba(255, 255, 255, 0.08);
+    --border-hover: rgba(255, 255, 255, 0.12);
+    --card-bg: #151b28;
+    --radius: 12px;
+    --radius-sm: 8px;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+}
+
+/* Animated background */
+.gradient-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at 0% 0%, rgba(37, 99, 235, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 100% 100%, rgba(245, 158, 11, 0.1) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.container {
+    position: relative;
+    z-index: 1;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 24px;
+}
+
+/* Header */
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 32px;
+    padding: 20px 24px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    backdrop-filter: blur(10px);
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.logo-icon {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, var(--accent), var(--warning));
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: 800;
+    color: white;
+}
+
+.logo-text h1 {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+}
+
+.logo-text p {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-top: 4px;
+}
+
+.header-actions {
+    display: flex;
+    gap: 12px;
+}
+
+/* Stats Grid */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 16px;
+    margin-bottom: 32px;
+}
+
+.stat-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    transition: all 0.2s;
+}
+
+.stat-card:hover {
+    border-color: var(--border-hover);
+    transform: translateY(-2px);
+}
+
+.stat-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
+
+.stat-value {
+    font-size: 32px;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.stat-value.blue { color: var(--accent); }
+.stat-value.green { color: var(--success); }
+.stat-value.red { color: var(--danger); }
+.stat-value.yellow { color: var(--warning); }
+
+/* Tabs */
+.tabs {
+    display: flex;
+    gap: 8px;
+    background: var(--bg-secondary);
+    padding: 6px;
+    border-radius: 50px;
+    border: 1px solid var(--border);
+    margin-bottom: 24px;
+}
+
+.tab {
+    flex: 1;
+    padding: 12px 24px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text-secondary);
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.tab.active {
+    background: var(--accent);
+    color: white;
+    box-shadow: 0 0 20px var(--accent-glow);
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* Toolbar */
+.toolbar {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.search-box {
+    flex: 1;
+    position: relative;
+    min-width: 280px;
+}
+
+.search-box svg {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+}
+
+.search-input {
+    width: 100%;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: 50px;
+    padding: 12px 20px 12px 45px;
+    color: var(--text-primary);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    outline: none;
+    transition: all 0.2s;
+}
+
+.search-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.filter-select {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: 50px;
+    padding: 12px 24px;
+    color: var(--text-primary);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    outline: none;
+    cursor: pointer;
+}
+
+/* Buttons */
+.btn {
+    padding: 12px 24px;
+    border-radius: 50px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+}
+
+.btn:hover {
+    background: var(--bg-secondary);
+    border-color: var(--border-hover);
+    color: var(--text-primary);
+}
+
+.btn-primary {
+    background: var(--accent);
+    color: white;
+    border: none;
+}
+
+.btn-primary:hover {
+    background: var(--accent-hover);
+    box-shadow: 0 0 20px var(--accent-glow);
+}
+
+.btn-success {
+    background: rgba(16, 185, 129, 0.15);
+    color: var(--success);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.btn-success:hover {
+    background: rgba(16, 185, 129, 0.25);
+}
+
+.btn-danger {
+    background: rgba(239, 68, 68, 0.15);
+    color: var(--danger);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.btn-danger:hover {
+    background: rgba(239, 68, 68, 0.25);
+}
+
+.btn-sm {
+    padding: 8px 16px;
+    font-size: 13px;
+}
+
+/* Add Form */
+.add-form {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 24px;
+    display: none;
+}
+
+.add-form.open {
+    display: block;
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.form-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: var(--text-primary);
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.field-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+}
+
+.field-input {
+    width: 100%;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    color: var(--text-primary);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    outline: none;
+    transition: all 0.2s;
+}
+
+.field-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+/* Pending Cards */
+.pending-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 16px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 20px;
+    transition: all 0.2s;
+}
+
+.pending-card:hover {
+    border-color: var(--border-hover);
+}
+
+.pending-info {
+    flex: 2;
+    min-width: 300px;
+}
+
+.pending-hwid {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--accent);
+    background: var(--bg-tertiary);
+    padding: 6px 12px;
+    border-radius: 50px;
+    display: inline-block;
+    margin-bottom: 10px;
+    cursor: pointer;
+}
+
+.pending-details {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+}
+
+.pending-detail {
+    font-size: 14px;
+}
+
+.pending-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+}
+
+.pending-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+/* Table */
+.table-container {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 1200px;
+}
+
+th {
+    text-align: left;
+    padding: 16px 20px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background: var(--bg-tertiary);
+    border-bottom: 1px solid var(--border);
+}
+
+td {
+    padding: 16px 20px;
+    font-size: 14px;
+    border-bottom: 1px solid var(--border);
+}
+
+tr:last-child td {
+    border-bottom: none;
+}
+
+tr:hover td {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.hwid-cell {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-secondary);
+    cursor: pointer;
+}
+
+.hwid-cell:hover {
+    color: var(--accent);
+}
+
+/* Status Badges */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 50px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.badge::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.badge-active {
+    background: rgba(16, 185, 129, 0.15);
+    color: var(--success);
+}
+.badge-active::before { background: var(--success); }
+
+.badge-blocked {
+    background: rgba(239, 68, 68, 0.15);
+    color: var(--danger);
+}
+.badge-blocked::before { background: var(--danger); }
+
+.badge-pending {
+    background: rgba(245, 158, 11, 0.15);
+    color: var(--warning);
+}
+.badge-pending::before { background: var(--warning); }
+
+/* Expiry */
+.expiry-warn { color: var(--warning); }
+.expiry-expired { color: var(--danger); }
+
+/* Actions */
+.actions {
+    display: flex;
+    gap: 6px;
+}
+
+/* Modal */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+}
+
+.modal-overlay.open {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.modal {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 32px;
+    width: 600px;
+    max-width: 90vw;
+    transform: scale(0.95);
+    transition: transform 0.2s;
+}
+
+.modal-overlay.open .modal {
+    transform: scale(1);
+}
+
+.modal-title {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.modal-sub {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 24px;
+}
+
+.modal-hwid {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--accent);
+    background: var(--bg-tertiary);
+    padding: 12px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 20px;
+    word-break: break-all;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-top: 24px;
+}
+
+/* Toast */
+.toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 50px;
+    padding: 14px 24px;
+    font-size: 14px;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    z-index: 9999;
+    transform: translateY(100px);
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.toast.show {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.toast-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--success);
+}
+.toast-dot.red { background: var(--danger); }
+
+/* GitHub Section */
+.github-section {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-top: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.github-info h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.github-info p {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.github-actions {
+    display: flex;
+    gap: 12px;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-muted);
+}
+
+.empty-state svg {
+    width: 60px;
+    height: 60px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+.empty-state p {
+    font-size: 14px;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
 </head>
 <body>
     <div class="gradient-bg"></div>
@@ -946,8 +940,9 @@
         // ============================================
         // CONFIGURATION
         // ============================================
-        const GITHUB_RAW = 'https://raw.githubusercontent.com/asadmaqbool2064-design/fbmarketcrew-licenses/main/licenses.json';
-        const GITHUB_API = 'https://api.github.com/repos/asadmaqbool2064-design/fbmarketcrew-licenses/contents/licenses.json';
+        const GITHUB_REPO = "asadmaqbool2064-design/fbmarketcrew-licenses";
+        const GITHUB_RAW = `https://raw.githubusercontent.com/${GITHUB_REPO}/main/licenses.json`;
+        const GITHUB_API = `https://api.github.com/repos/${GITHUB_REPO}`;
         
         // ============================================
         // DATA STORAGE
@@ -1040,6 +1035,42 @@
         }
 
         // ============================================
+        // GITHUB ISSUES SE PENDING REGISTRATIONS LOAD KARO
+        // ============================================
+        async function loadPendingFromIssues() {
+            try {
+                const response = await fetch(`${GITHUB_API}/issues?labels=pending&state=open`);
+                if (!response.ok) throw new Error('Failed to fetch issues');
+                
+                const issues = await response.json();
+                
+                pendingRegistrations = issues.map(issue => {
+                    // Parse HWID from issue body
+                    const hwidMatch = issue.body.match(/\*\*HWID\*\*\s*\|\s*`(.+)`/);
+                    const nameMatch = issue.body.match(/\*\*Name\*\*\s*\|\s*(.+)/);
+                    const emailMatch = issue.body.match(/\*\*Email\*\*\s*\|\s*(.+)/);
+                    const waMatch = issue.body.match(/\*\*WhatsApp\*\*\s*\|\s*(.+)/);
+                    
+                    return {
+                        hwid: hwidMatch ? hwidMatch[1].trim() : '',
+                        name: nameMatch ? nameMatch[1].trim() : '',
+                        email: emailMatch ? emailMatch[1].trim() : '',
+                        wa: waMatch ? waMatch[1].trim() : '',
+                        issueNumber: issue.number,
+                        timestamp: issue.created_at.split('T')[0]
+                    };
+                });
+                
+                renderPending();
+                console.log('Pending registrations loaded:', pendingRegistrations);
+            } catch(e) {
+                console.log('Error loading issues:', e);
+                pendingRegistrations = [];
+                renderPending();
+            }
+        }
+
+        // ============================================
         // PENDING REGISTRATIONS
         // ============================================
         function renderPending() {
@@ -1089,6 +1120,10 @@
                                     <div>${p.wa}</div>
                                 </div>
                                 <div class="pending-detail">
+                                    <div class="pending-label">Issue #</div>
+                                    <div>${p.issueNumber}</div>
+                                </div>
+                                <div class="pending-detail">
                                     <div class="pending-label">Received</div>
                                     <div>${formatDate(p.timestamp)}</div>
                                 </div>
@@ -1119,39 +1154,54 @@
             updateStats();
         }
 
-        function approveRegistration(index) {
+        async function approveRegistration(index) {
             const reg = pendingRegistrations[index];
             
-            const exp = new Date();
-            exp.setMonth(exp.getMonth() + 1);
+            // Ask for expiry days
+            const days = prompt('Enter expiry days (default 30):', '30');
+            const expiryDays = parseInt(days) || 30;
             
+            const exp = new Date();
+            exp.setDate(exp.getDate() + expiryDays);
+            const expiryStr = exp.toISOString().split('T')[0];
+            
+            // Add to approved clients
             approvedClients.push({
                 hwid: reg.hwid,
                 name: reg.name,
                 email: reg.email,
                 wa: reg.wa,
                 reg: today(),
-                expiry: exp.toISOString().split('T')[0],
+                expiry: expiryStr,
                 status: 'ACTIVE'
             });
             
+            // Close GitHub issue
+            await closeIssue(reg.issueNumber, 'approved');
+            
+            // Remove from pending
             pendingRegistrations.splice(index, 1);
             
             renderPending();
             renderClients();
-            toast(`${reg.name} approved and activated`);
+            toast(`${reg.name} approved until ${expiryStr}`);
         }
 
-        function rejectRegistration(index) {
+        async function rejectRegistration(index) {
             const reg = pendingRegistrations[index];
+            
+            // Close GitHub issue
+            await closeIssue(reg.issueNumber, 'rejected');
+            
             pendingRegistrations.splice(index, 1);
             renderPending();
             toast(`Registration from ${reg.name} rejected`, false);
         }
 
-        function blockRegistration(index) {
+        async function blockRegistration(index) {
             const reg = pendingRegistrations[index];
             
+            // Add as blocked
             approvedClients.push({
                 hwid: reg.hwid,
                 name: reg.name,
@@ -1162,10 +1212,36 @@
                 status: 'BLOCKED'
             });
             
+            // Close GitHub issue
+            await closeIssue(reg.issueNumber, 'blocked');
+            
             pendingRegistrations.splice(index, 1);
             renderPending();
             renderClients();
             toast(`${reg.name} added as BLOCKED`, false);
+        }
+
+        async function closeIssue(issueNumber, action) {
+            if (!githubToken) {
+                githubToken = prompt('Enter GitHub token to close issue:');
+                if (!githubToken) return;
+            }
+            
+            try {
+                const response = await fetch(`${GITHUB_API}/issues/${issueNumber}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': `token ${githubToken}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        state: 'closed',
+                        labels: [action]
+                    })
+                });
+            } catch(e) {
+                console.log('Error closing issue:', e);
+            }
         }
 
         // ============================================
@@ -1380,16 +1456,6 @@
                 };
             });
             
-            pendingRegistrations.forEach(p => {
-                data[p.hwid] = {
-                    status: 'PENDING',
-                    name: p.name || '',
-                    email: p.email || '',
-                    wa: p.wa || '',
-                    timestamp: p.timestamp
-                };
-            });
-            
             return JSON.stringify(data, null, 2);
         }
 
@@ -1417,7 +1483,7 @@
             
             try {
                 // Get current file SHA
-                const getResp = await fetch(GITHUB_API, {
+                const getResp = await fetch(`${GITHUB_API}/contents/licenses.json`, {
                     headers: {
                         'Authorization': `token ${githubToken}`
                     }
@@ -1437,7 +1503,7 @@
                     sha: sha
                 };
                 
-                const putResp = await fetch(GITHUB_API, {
+                const putResp = await fetch(`${GITHUB_API}/contents/licenses.json`, {
                     method: 'PUT',
                     headers: {
                         'Authorization': `token ${githubToken}`,
@@ -1460,41 +1526,31 @@
             toast('Loading from GitHub...');
             
             try {
-                const response = await fetch(GITHUB_RAW + '?t=' + Date.now());
-                if (!response.ok) throw new Error('HTTP ' + response.status);
+                // Load approved clients from JSON
+                const jsonResponse = await fetch(GITHUB_RAW + '?t=' + Date.now());
+                if (!jsonResponse.ok) throw new Error('Failed to fetch JSON');
                 
-                const data = await response.json();
+                const jsonData = await jsonResponse.json();
                 
-                pendingRegistrations = [];
-                approvedClients = [];
+                approvedClients = Object.entries(jsonData).map(([hwid, val]) => ({
+                    hwid,
+                    status: val.status || 'ACTIVE',
+                    name: val.name || '',
+                    email: val.email || '',
+                    wa: val.wa || '',
+                    reg: val.reg || '',
+                    expiry: val.expiry || ''
+                }));
                 
-                Object.entries(data).forEach(([hwid, val]) => {
-                    if (val.status === 'PENDING') {
-                        pendingRegistrations.push({
-                            hwid,
-                            name: val.name || '',
-                            email: val.email || '',
-                            wa: val.wa || '',
-                            timestamp: val.timestamp || today()
-                        });
-                    } else {
-                        approvedClients.push({
-                            hwid,
-                            status: val.status || 'ACTIVE',
-                            name: val.name || '',
-                            email: val.email || '',
-                            wa: val.wa || '',
-                            reg: val.reg || '',
-                            expiry: val.expiry || ''
-                        });
-                    }
-                });
+                // Load pending from issues
+                await loadPendingFromIssues();
                 
                 renderPending();
                 renderClients();
                 toast(`Loaded ${approvedClients.length} clients, ${pendingRegistrations.length} pending`);
-            } catch (e) {
+            } catch(e) {
                 toast('Could not load from GitHub: ' + e.message, false);
+                console.error(e);
                 initDemo();
             }
         }
@@ -1510,18 +1566,10 @@
                 return { success: false, message: 'HWID already registered' };
             }
             
-            pendingRegistrations.push({
-                hwid: hwid.toUpperCase(),
-                name: name,
-                email: email,
-                wa: wa,
-                timestamp: today()
-            });
+            // This is just for simulation - actual registration happens via GitHub Issues
+            toast(`New registration from ${name} - Check GitHub Issues`, true);
             
-            renderPending();
-            toast(`New registration from ${name}`, true);
-            
-            return { success: true, message: 'Registration submitted for approval' };
+            return { success: true, message: 'Registration submitted - check GitHub Issues' };
         };
 
         window.botCheckStatus = function(hwid) {
@@ -1549,10 +1597,6 @@
                 return { status: 'ACTIVE', message: 'Access granted' };
             }
             
-            if (pendingRegistrations.find(p => p.hwid === hwid)) {
-                return { status: 'PENDING', message: 'Registration pending approval' };
-            }
-            
             return { status: 'NOT_FOUND', message: 'Not registered' };
         };
 
@@ -1560,16 +1604,6 @@
         // INITIALIZATION
         // ============================================
         function initDemo() {
-            pendingRegistrations = [
-                {
-                    hwid: 'A1B2C3D4E5F678901234567890ABCDEF1234567890ABCDEF1234567890ABCDEF',
-                    name: 'New User',
-                    email: 'user@test.com',
-                    wa: '03001234567',
-                    timestamp: today()
-                }
-            ];
-            
             approvedClients = [
                 {
                     hwid: 'E274E46D37CFE3DF125983F360D4C9B07C0F7194075A9E371D64330C03BBD98F',
@@ -1581,6 +1615,8 @@
                     status: 'ACTIVE'
                 }
             ];
+            
+            pendingRegistrations = [];
             
             renderPending();
             renderClients();
