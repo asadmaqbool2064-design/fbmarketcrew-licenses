@@ -1,20 +1,10 @@
 {
-  "E274E46D37CFE3DF125983F360D4C9B07C0F7194075A9E371D64330C03BBD98F": {
+  "EXAMPLE_HWID_123": {
     "status": "ACTIVE",
-    "name": "Asad",
-    "email": "asad@gmail.com",
-    "wa": "03131718485",
-    "reg": "2026-03-16",
-    "expiry": "2026-04-16"
-  }
-}
-{
-  "E274E46D37CFE3DF125983F360D4C9B07C0F7194075A9E371D64330C03BBD98F": {
-    "status": "ACTIVE",
-    "name": "Asad",
-    "email": "asad@gmail.com",
-    "wa": "03131718485",
-    "reg": "2026-03-16",
-    "expiry": "2026-04-16"
+    "name": "Test User",
+    "email": "test@example.com",
+    "wa": "03001234567",
+    "reg": "2026-03-17",
+    "expiry": "2026-12-31"
   }
 }
